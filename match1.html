@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football Match Prediction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function predictMatch() {
+      const homeTeam = document.getElementById('homeTeam').value.trim();
+      const awayTeam = document.getElementById('awayTeam').value.trim();
+
+      if (!homeTeam || !awayTeam) {
+        document.getElementById('result').innerHTML = '<span class="text-red-500 font-bold">Please enter both home and away teams.</span>';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('homeTeam', homeTeam);
+      formData.append('awayTeam', awayTeam);
+
+      fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        const { result, home_goals, away_goals } = data;
+        document.getElementById('result').innerHTML = `
+          <div class="mt-6 p-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg shadow-lg animate-fadeIn">
+            <p class="text-2xl font-bold text-white animate-bounce">🔥 Prediction: ${result} 🔥</p>
+            <p class="text-xl text-white mt-2">🏆 Predicted Score: <span class="font-bold text-yellow-300">${homeTeam} ${home_goals} - ${away_goals} ${awayTeam}</span></p>
+          </div>
+        `;
+
+        // Determine fireworks color based on winning team
+        let fireworksColor;
+        if (result.includes(homeTeam)) {
+          fireworksColor = teamColors[teams.indexOf(homeTeam)];
+        } else if (result.includes(awayTeam)) {
+          fireworksColor = teamColors[teams.indexOf(awayTeam)];
+        } else {
+          fireworksColor = '#FFD700'; // Gold color for draw
+        }
+
+        triggerFireworks(fireworksColor);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('result').innerHTML = '<span class="text-red-500 font-bold">Error predicting match outcome. Please try again later.</span>';
+      });
+    }
+
+    function triggerFireworks(color) {
+      const fireworksContainer = document.createElement('div');
+      fireworksContainer.classList.add('fireworks-container');
+      document.body.appendChild(fireworksContainer);
+
+      for (let i = 0; i < 10; i++) {
+        const firework = document.createElement('div');
+        firework.classList.add('firework');
+        firework.style.backgroundColor = color;
+        firework.style.left = `${Math.random() * 100}%`;
+        firework.style.animationDelay = `${Math.random() * 1}s`;
+        fireworksContainer.appendChild(firework);
+      }
+
+      setTimeout(() => {
+        fireworksContainer.remove();
+      }, 2000);
+    }
+  </script>
+  <style>
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Fireworks Animation */
+    .fireworks-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .firework {
+      position: absolute;
+      bottom: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      opacity: 100;
+      animation: explode 3s ease-out forwards;
+    }
+    @keyframes explode {
+      0% { transform: translateY(0); opacity: 50; }
+      50% { transform: translateY(-50vh); opacity: 50; }
+      100% { transform: translateY(-70vh) scale(2); opacity: 50; }
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-black relative">
+  <video autoplay loop muted class="video-bg">
+    <source src="static/one.mp4" type="video/mp4">
+  </video>
+
+  <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-5xl p-6">
+    <div class="bg-white bg-opacity-20 p-6 rounded-lg shadow-xl w-full max-w-md relative backdrop-blur-md">
+      <h1 class="text-3xl font-bold text-center text-white mb-6">⚽ Football Match Prediction ⚽</h1>
+      <label class="block text-white font-medium mb-1" for="homeTeam">🏠 Enter Home Team:</label>
+      <input type="text" id="homeTeam" class="w-full px-4 py-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md" placeholder="e.g., Arsenal">
+      <label class="block text-white font-medium mb-1" for="awayTeam">🚀 Enter Away Team:</label>
+      <input type="text" id="awayTeam" class="w-full px-4 py-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md" placeholder="e.g., Leeds">
+      <button onclick="predictMatch()" class="w-full bg-gradient-to-r from-green-400 to-blue-600 text-white py-3 rounded-md text-lg font-semibold hover:scale-105 transform transition-all duration-300 shadow-lg">⚡ Predict Match ⚡</button>
+      <div id="result" class="mt-6 text-center text-lg text-white font-bold"></div>
+    </div>
+
+    <div class="bg-white bg-opacity-20 p-4 rounded-lg shadow-xl w-full max-w-sm relative backdrop-blur-md">
+      <h2 class="text-2xl font-bold text-center text-white mb-4">🏆 EPL 2025 Teams 🏆</h2>
+      <div id="epl-teams" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+    </div>
+  </div>
+
+  <script>
+    const teams = [
+      'Arsenal', 'Aston Villa', 'Bournemouth', 'Brentford', 'Brighton', 'Burnley',
+      'Chelsea', 'Crystal Palace', 'Everton', 'Fulham', 'Liverpool', 'Luton',
+      'Man City', 'Man United', 'Newcastle', "Nott'm Forest", 'Sheffield United',
+      'Tottenham', 'West Ham', 'Wolves'
+    ];
+
+    const teamColors = [
+      '#EF4444', '#F97316', '#FACC15', '#4ADE80', '#34D399', '#22D3EE',
+      '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#D946EF',
+      '#9333EA', '#6D28D9', '#7C3AED', '#A21CAF', '#BE185D', '#E11D48',
+      '#F59E0B', '#10B981'
+    ];
+
+    const teamsContainer = document.getElementById('epl-teams');
+    teamsContainer.innerHTML = teams.map((team, index) => `
+      <div class="p-4 rounded-lg shadow-md text-center text-white text-sm transform hover:scale-105 transition duration-300"
+           style="background-color: ${teamColors[index]};">
+        ${team}
+      </div>
+    `).join('');
+  </script>
+</body>
+</html>
